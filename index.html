@@ -1,38 +1,213 @@
-<!doctype html><html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUO Selangor | Dashboard Tapak Perkuburan</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><style>
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SUO | Dashboard Tapak Perkuburan Negeri Selangor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<style>
 :root{
-  --red:#d62027;--red-dark:#b71720;--orange:#ef5a24;--orange2:#f47b20;--gold:#f5a819;
-  --ink:#252525;--muted:#6f7175;--bg:#f6f7f8;--card:#ffffff;--line:#e4e6e8;
-  --soft:#fff4e7;--soft-red:#fff0f0;--shadow:0 8px 24px rgba(53,38,24,.08)
+  --red:#D4202F; --red2:#B91526; --orange:#F06423; --amber:#F6A915; --cream:#FFF8EF;
+  --ink:#17213A; --muted:#697187; --line:#E9DFD3; --panel:#FFFFFF; --bg:#F8F8F7;
+  --shadow:0 4px 14px rgba(74,49,28,.08); --radius:9px;
 }
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-header{height:96px;background:linear-gradient(100deg,#fff 0%,#fffaf4 58%,#fff1e4 100%);display:flex;align-items:center;padding:0 30px;border-bottom:3px solid transparent;border-image:linear-gradient(90deg,var(--red),var(--orange),var(--gold)) 1}
-.brand{font-size:13px;font-weight:900;color:var(--red);letter-spacing:1.2px}.title{font-size:28px;font-weight:900;margin:3px 0;color:#222}.sub{color:#6d655e;font-size:13px}
-.layout{display:grid;grid-template-columns:238px 1fr;min-height:calc(100vh - 96px)}
-aside{background:linear-gradient(180deg,#cb1f27 0%,#df3528 34%,#ed5d21 70%,#ef8518 100%);color:#fff;padding:16px 14px;box-shadow:8px 0 20px rgba(118,42,21,.09);position:relative;overflow:hidden}
-aside:after{content:'';position:absolute;width:210px;height:210px;border:28px solid rgba(255,255,255,.08);border-radius:50%;right:-115px;bottom:70px}
-.logo-wrap{background:#fff;border-radius:14px;padding:10px 12px;margin:0 4px 22px;box-shadow:0 6px 18px rgba(86,26,18,.2);position:relative;z-index:1}.logo-wrap img{display:block;width:100%;max-height:148px;object-fit:contain}
-.nav{padding:13px 14px;border-radius:9px;margin:6px 0;color:rgba(255,255,255,.92);font-weight:600;position:relative;z-index:1;transition:.2s ease}.nav:hover{background:rgba(255,255,255,.12)}.nav.active{background:#fff;color:var(--red-dark);font-weight:900;box-shadow:0 5px 14px rgba(113,37,21,.18)}
-.foot{position:relative;z-index:1;margin-top:38px;padding:14px;color:rgba(255,255,255,.82);font-size:12px;line-height:1.5}
-main{padding:18px 20px}.filters{display:grid;grid-template-columns:repeat(4,1fr) 120px;gap:10px;margin-bottom:14px}
-select,button{padding:11px;border:1px solid #ddd6cf;border-radius:9px;background:white;color:#3b3531;outline:none}select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(239,90,36,.12)}button{border:0;background:linear-gradient(90deg,var(--red),var(--orange));color:#fff;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(214,32,39,.18)}button:hover{filter:brightness(.96)}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}.card{background:#fff;border-radius:13px;box-shadow:var(--shadow);border:1px solid var(--line)}
-.kpi{padding:17px;position:relative;overflow:hidden}.kpi:before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(var(--red),var(--orange),var(--gold))}.klabel{font-size:12px;color:var(--muted);font-weight:800;letter-spacing:.35px}.kval{font-size:30px;font-weight:900;color:var(--red-dark);margin-top:5px}
-.grid{display:grid;grid-template-columns:1.55fr .9fr .9fr;gap:12px}.mapcard{grid-row:span 2;overflow:hidden}.ctitle{font-weight:900;padding:13px 15px;border-bottom:1px solid #eee8e2;color:#312c28;background:linear-gradient(90deg,#fff,#fffaf5)}.mapwrap{height:525px}#map{height:100%}.chartbox{padding:12px;height:255px}.tablecard{grid-column:1/-1;margin-top:12px;overflow:hidden}.tablewrap{overflow:auto;max-height:340px}
-table{width:100%;border-collapse:collapse;font-size:12px}th{position:sticky;top:0;background:#fff4e9;text-align:left;padding:10px;color:#5b3a29;border-bottom:1px solid #ead8ca}td{padding:9px 10px;border-top:1px solid #f0ebe6}.pill{padding:3px 7px;border-radius:10px;background:#fff0e7;color:#a83b1f;font-weight:700}.leaflet-popup-content{min-width:220px}.empty{color:#999}
-.leaflet-control-zoom a{color:var(--red-dark)!important}.leaflet-popup-content-wrapper{border-radius:10px}.leaflet-popup-tip{background:white}
-@media(max-width:1000px){.layout{grid-template-columns:1fr}aside{display:none}.grid{grid-template-columns:1fr}.mapcard{grid-row:auto}.tablecard{grid-column:auto}.kpis{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.title{font-size:20px}}
-</style></head><body>
-<header><div><div class="brand">SELANGOR URBAN OBSERVATORY (SUO)</div><div class="title">DASHBOARD TAPAK PERKUBURAN NEGERI SELANGOR</div><div class="sub">Analisis spatial, taburan dan keluasan tapak perkuburan</div></div></header><div class="layout"><aside><div class="logo-wrap"><img src="assets/suo-logo.jpeg" alt="Selangor Urban Observatory (SUO)"></div><div class="nav active">▣ Dashboard Utama</div><div class="nav">⌖ Taburan Tapak</div><div class="nav">▤ Analisis Daerah</div><div class="nav">◉ Kategori & Agama</div><div class="nav">▦ Senarai Tapak</div><div class="foot">PLANMalaysia Selangor<br>Data Tapak Perkuburan 2026</div></aside><main>
-<div class="filters"><select id="daerah"><option value="">Semua Daerah</option></select><select id="pbt"><option value="">Semua PBT</option></select><select id="agama"><option value="">Semua Agama</option></select><select id="kategori"><option value="">Semua Kategori</option></select><button id="reset">Set Semula</button></div>
-<div class="kpis"><div class="card kpi"><div class="klabel">JUMLAH TAPAK</div><div class="kval" id="ktotal">-</div></div><div class="card kpi"><div class="klabel">JUMLAH KELUASAN</div><div class="kval"><span id="karea">-</span> <small style="font-size:13px">ha</small></div></div><div class="card kpi"><div class="klabel">TAPAK ISLAM</div><div class="kval" id="kislam">-</div></div><div class="card kpi"><div class="klabel">TAPAK BUKAN ISLAM</div><div class="kval" id="knon">-</div></div></div>
-<div class="grid"><div class="card mapcard"><div class="ctitle">Taburan Tapak Perkuburan Negeri Selangor</div><div class="mapwrap"><div id="map"></div></div></div><div class="card"><div class="ctitle">Tapak Mengikut Daerah</div><div class="chartbox"><canvas id="districtChart"></canvas></div></div><div class="card"><div class="ctitle">Komposisi Agama</div><div class="chartbox"><canvas id="religionChart"></canvas></div></div><div class="card"><div class="ctitle">Keluasan Mengikut Daerah (ha)</div><div class="chartbox"><canvas id="areaChart"></canvas></div></div><div class="card"><div class="ctitle">Kategori Perkuburan</div><div class="chartbox"><canvas id="categoryChart"></canvas></div></div></div>
-<div class="card tablecard"><div class="ctitle">Senarai Tapak Perkuburan <span id="count" style="font-weight:400;color:#718096"></span></div><div class="tablewrap"><table><thead><tr><th>Nama</th><th>Daerah</th><th>PBT</th><th>Agama</th><th>Kategori</th><th>Lokasi</th><th>Luas (ha)</th></tr></thead><tbody id="rows"></tbody></table></div></div>
-</main></div><script>
-const PALETTE=['#d62027','#ef5a24','#f47b20','#f5a819','#b71720','#8f9092','#f3b33d','#d9472d'];
-let all=[], layer, charts={}; const map=L.map('map').setView([3.25,101.45],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function fill(id,key){const el=document.getElementById(id);[...new Set(all.map(x=>x.properties[key]).filter(Boolean))].sort().forEach(v=>el.insertAdjacentHTML('beforeend',`<option>${esc(v)}</option>`))}function group(data,key,sum=false){let o={};data.forEach(x=>{let k=x.properties[key]||'Tiada Data';o[k]=(o[k]||0)+(sum?Number(x.properties.Luas_Hek||0):1)});return Object.entries(o).sort((a,b)=>b[1]-a[1])}
-function chart(id,type,labels,vals,label){if(charts[id])charts[id].destroy();const colors=labels.map((_,i)=>PALETTE[i%PALETTE.length]);charts[id]=new Chart(document.getElementById(id),{type,data:{labels,datasets:[{label,data:vals,borderWidth:type==='doughnut'?2:0,borderColor:type==='doughnut'?'#fff':'transparent',backgroundColor:colors,borderRadius:type==='bar'?5:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==='doughnut',position:'bottom',labels:{boxWidth:12,usePointStyle:true,font:{size:10}}}},scales:type==='doughnut'?{}:{x:{grid:{display:false},ticks:{font:{size:9},color:'#6f7175'}},y:{beginAtZero:true,grid:{color:'#f0ece7'},ticks:{color:'#6f7175'}}}}})}
-function render(){const f={Daerah:daerah.value,PBT:pbt.value,Agama:agama.value,Kategori:kategori.value};let d=all.filter(x=>Object.entries(f).every(([k,v])=>!v||x.properties[k]===v));ktotal.textContent=d.length;karea.textContent=d.reduce((s,x)=>s+Number(x.properties.Luas_Hek||0),0).toLocaleString('ms-MY',{maximumFractionDigits:2});kislam.textContent=d.filter(x=>x.properties.Agama.toLowerCase()==='islam').length;knon.textContent=d.filter(x=>x.properties.Agama.toLowerCase()!=='islam').length;count.textContent=`(${d.length} rekod)`;
-if(layer)map.removeLayer(layer);layer=L.geoJSON({type:'FeatureCollection',features:d},{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,weight:1,color:'#fff',fillColor:(f.properties.Agama||'').toLowerCase()==='islam'?'#d62027':'#f5a819',fillOpacity:.9}),onEachFeature:(f,l)=>{let p=f.properties;l.bindPopup(`<b>${esc(p.Nama)}</b><br>${esc(p.Kategori)}<br><b>Daerah:</b> ${esc(p.Daerah)}<br><b>PBT:</b> ${esc(p.PBT)}<br><b>Lokasi:</b> ${esc(p.Lokasi)}<br><b>Luas:</b> ${Number(p.Luas_Hek).toFixed(2)} ha`)}}).addTo(map);if(d.length){let b=layer.getBounds();if(b.isValid())map.fitBounds(b,{padding:[20,20],maxZoom:12})}
-let g=group(d,'Daerah');chart('districtChart','bar',g.map(x=>x[0]),g.map(x=>x[1]),'Bilangan Tapak');let r=group(d,'Agama');chart('religionChart','doughnut',r.map(x=>x[0]),r.map(x=>x[1]),'Tapak');let a=group(d,'Daerah',true);chart('areaChart','bar',a.map(x=>x[0]),a.map(x=>+x[1].toFixed(2)),'Hektar');let c=group(d,'Kategori');chart('categoryChart','bar',c.map(x=>x[0]),c.map(x=>x[1]),'Tapak');rows.innerHTML=d.map(x=>{let p=x.properties;return `<tr><td><b>${esc(p.Nama)}</b></td><td>${esc(p.Daerah)}</td><td>${esc(p.PBT)}</td><td><span class="pill">${esc(p.Agama)}</span></td><td>${esc(p.Kategori)}</td><td>${esc(p.Lokasi)}</td><td>${Number(p.Luas_Hek).toFixed(2)}</td></tr>`}).join('')}
-fetch('cemeteries.geojson').then(r=>r.json()).then(j=>{all=j.features;fill('daerah','Daerah');fill('pbt','PBT');fill('agama','Agama');fill('kategori','Kategori');render()});['daerah','pbt','agama','kategori'].forEach(id=>document.getElementById(id).addEventListener('change',render));reset.onclick=()=>{['daerah','pbt','agama','kategori'].forEach(id=>document.getElementById(id).value='');render()};</script></body></html>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);min-width:1180px}
+/* HEADER */
+.topbar{height:124px;background:linear-gradient(90deg,#fff 0%,#fffdfa 58%,#fff8ee 100%);border-top:1px solid #ecdcc8;border-bottom:1px solid #ead8c4;display:flex;align-items:center;padding:0 25px;position:relative;overflow:hidden}
+.topbar::after{content:"";position:absolute;right:0;top:0;width:600px;height:100%;background:url('assets/header-skyline.png') right center/cover no-repeat;pointer-events:none}
+.top-brand{display:flex;align-items:center;gap:16px;position:relative;z-index:2}
+.top-logo{width:84px;height:92px;object-fit:contain;mix-blend-mode:multiply}
+.eyebrow{font-weight:800;font-size:12px;letter-spacing:1.4px;color:#CF512F;margin-bottom:7px}
+.top-title{font-size:28px;line-height:1.04;font-weight:900;color:#17213A;letter-spacing:-.5px}
+.top-sub{font-size:14px;margin-top:8px;color:#555B69}
+.top-actions{margin-left:auto;z-index:3;display:flex;align-items:flex-start;gap:16px;padding-right:24px}
+.icon-btn{width:34px;height:34px;border:none;background:transparent;color:var(--red);font-size:18px;cursor:pointer}
+.suo-dot{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,var(--red),var(--orange),var(--amber));color:#fff;font-weight:800;font-size:13px;box-shadow:0 3px 9px rgba(216,56,34,.18)}
+.motto{text-align:right;color:#7B251C;font-size:13px;font-style:italic;line-height:1.5;margin-left:4px}
+.app{display:grid;grid-template-columns:214px 1fr;min-height:calc(100vh - 124px)}
+/* SIDEBAR */
+.sidebar{background:linear-gradient(180deg,#fffaf4 0%,#fff6ec 100%);border-right:1px solid #eadfce;padding:14px 14px 18px;position:relative;overflow:hidden}
+.side-nav{display:flex;flex-direction:column;gap:6px;position:relative;z-index:2}
+.nav-item{height:47px;border-radius:7px;display:flex;align-items:center;gap:15px;padding:0 16px;color:#222d42;text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;transition:.18s ease}
+.nav-item i{width:24px;text-align:center;font-size:18px;color:var(--red)}
+.nav-item.active{background:linear-gradient(100deg,#C9142C 0%,#EA4922 55%,#F6A313 100%);color:#fff;font-weight:800;box-shadow:0 4px 10px rgba(208,54,31,.2)}
+.nav-item.active i{color:#fff}
+.nav-item:not(.active):hover{background:#fff0e2;transform:translateX(2px)}
+.side-art{position:absolute;bottom:130px;left:0;width:100%;height:180px;opacity:.92;background:url('assets/header-skyline.png') center bottom/auto 115px no-repeat;filter:saturate(1.2)}
+.side-brand{position:absolute;bottom:20px;left:20px;right:20px;text-align:center;color:#374058;font-size:11px;line-height:1.45;z-index:3}
+.side-brand .words{color:#CF282A;font-weight:700;line-height:1.65;margin-bottom:8px}.side-brand .words span{margin:0 5px}.plan{font-size:16px;font-weight:900;color:#3A8D38}.plan span{color:#17213A}.plan2{font-size:13px;font-weight:800;color:#005CA8}
+/* MAIN */
+.main{padding:12px 16px 7px;overflow:hidden}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+.kpi{height:88px;background:var(--panel);border:1px solid #ead9c8;border-radius:var(--radius);display:grid;grid-template-columns:74px 1fr;align-items:center;box-shadow:0 1px 4px rgba(89,55,28,.03);overflow:hidden}
+.kpi-icon{height:100%;display:grid;place-items:center;font-size:37px;background:linear-gradient(180deg,#fffdf9,#fff8ed);color:var(--red)}
+.kpi:nth-child(2) .kpi-icon{color:var(--orange)} .kpi:nth-child(3) .kpi-icon{color:#F18D19}.kpi:nth-child(4) .kpi-icon{color:var(--red)}
+.kpi-label{font-size:12px;color:#17213A;font-weight:700;margin-bottom:4px}.kpi-value{font-size:31px;font-weight:900;color:#A90E35;line-height:1}.kpi-value.dark{color:#182545}.kpi-unit{font-size:12px;font-weight:500;color:#274672;margin-left:7px}.kpi-share{font-size:12px;color:#19448A;font-weight:600;margin-left:7px}
+.filterbar{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 105px 125px;gap:10px;background:#fff;border:1px solid #e7ded2;border-radius:8px;padding:8px;margin-bottom:8px;align-items:end}
+.filter label{display:block;font-size:10.5px;font-weight:700;color:#26314A;margin:0 0 5px 2px}.filter select,.filter input{width:100%;height:34px;border:1px solid #D6DEE9;border-radius:6px;background:#fff;padding:0 10px;color:#1A2945;font-size:11.5px;outline:none}.filter select:focus,.filter input:focus{border-color:#F09529;box-shadow:0 0 0 3px rgba(240,149,41,.12)}
+.btn{height:42px;border-radius:6px;border:1px solid #25324B;background:#fff;color:#182036;font-weight:700;cursor:pointer;font-size:12px}.btn.search{border:none;background:linear-gradient(100deg,#EC6D1C,#F5A615);color:white;box-shadow:0 4px 10px rgba(239,119,31,.19)}
+.content-grid{display:grid;grid-template-columns:1.63fr .88fr .88fr;grid-template-rows:246px 214px;gap:8px}
+.panel{background:#fff;border:1px solid #E5E1DE;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(39,38,35,.025)}
+.panel-title{height:39px;border-bottom:1px solid #F0E5DD;display:flex;align-items:center;padding:0 12px;color:#C9162C;font-weight:800;font-size:13px;gap:7px}.panel-title::before{content:"";width:4px;height:21px;background:linear-gradient(var(--red),var(--orange));border-radius:3px}.panel-title.map-title{background:linear-gradient(90deg,#C8132D,#E94822,#F39714);color:#fff;border:0}.panel-title.map-title::before{background:#fff}.panel-title .right-link{margin-left:auto;color:#2464CD;font-size:10px;font-weight:600;cursor:pointer}
+.map-panel{grid-row:1 / span 2}.map-holder{position:relative;height:calc(100% - 39px)}#map{height:100%;width:100%}
+.map-search{position:absolute;z-index:500;right:12px;top:10px;width:235px;height:35px;background:#fff;border:1px solid #C9D0DB;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;padding:0 9px}.map-search input{border:0;outline:0;width:100%;font-size:10.5px;color:#273249}.map-search i{color:#17213A}
+.legend{position:absolute;z-index:500;left:10px;bottom:10px;background:rgba(16,43,75,.9);border-radius:5px;color:white;padding:9px 10px;font-size:9.5px;line-height:1.65;min-width:155px;box-shadow:0 3px 10px rgba(0,0,0,.15)}.legend b{font-size:10px}.legend-row{display:flex;align-items:center;gap:7px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block}.dot.red{background:#E7232D}.dot.orange{background:#F5A316}.line-box{width:15px;height:12px;border:2px solid #FFD000;display:inline-block}
+.chart-wrap{height:calc(100% - 39px);padding:8px 9px 7px}.chart-wrap canvas{width:100%!important;height:100%!important}
+.table-panel{margin-top:8px}.table-wrap{height:183px;overflow:auto;padding:0 9px 7px}.data-table{border-collapse:collapse;width:100%;font-size:9.5px}.data-table th{position:sticky;top:0;background:#F3F3F3;color:#1D2840;padding:6px;border:1px solid #E0E0E0;font-weight:800;text-align:center;z-index:2}.data-table td{padding:5px 7px;border:1px solid #ECECEC;color:#27314A;white-space:nowrap;max-width:270px;overflow:hidden;text-overflow:ellipsis}.data-table td:first-child{text-align:center}.status{background:#DDF5D7;color:#17812C;border-radius:5px;padding:3px 8px;font-size:8.5px;font-weight:600}.table-panel .panel-title{height:34px}
+.footer{font-size:9px;color:#687087;text-align:right;padding:6px 3px 0}
+.leaflet-control-attribution{font-size:8px!important}.leaflet-bar a{color:#17213A!important}.leaflet-popup-content-wrapper{border-radius:8px;font-family:Inter,Arial,sans-serif}.leaflet-popup-content{font-size:11px;line-height:1.45;margin:12px}.leaflet-popup-content b{color:#B9142C}
+@media(max-width:1400px){body{min-width:1100px}.app{grid-template-columns:190px 1fr}.sidebar{padding-left:10px;padding-right:10px}.nav-item{padding:0 11px;gap:11px}.top-title{font-size:24px}.content-grid{grid-template-columns:1.55fr .9fr .9fr}.kpi{grid-template-columns:62px 1fr}.kpi-value{font-size:27px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="top-brand">
+    <img class="top-logo" src="assets/suo-logo.jpg" alt="SUO Selangor">
+    <div>
+      <div class="eyebrow">SELANGOR URBAN OBSERVATORY · URBAN SAFETY INTELLIGENCE</div>
+      <div class="top-title">Dashboard Tapak Perkuburan Negeri Selangor</div>
+      <div class="top-sub">Perancangan Tanah Perkuburan Untuk Kesejahteraan Masyarakat</div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" title="Utama"><i class="fa-solid fa-house"></i></button>
+    <button class="icon-btn" title="Notifikasi"><i class="fa-regular fa-bell"></i></button>
+    <div class="suo-dot">SUO</div>
+    <div class="motto">“Tanah yang dirancang,<br>Legasi yang berterusan”</div>
+  </div>
+</header>
+<div class="app">
+  <aside class="sidebar">
+    <nav class="side-nav">
+      <a class="nav-item active" data-target="top"><i class="fa-solid fa-house"></i><span>Utama</span></a>
+      <a class="nav-item" data-target="map-section"><i class="fa-solid fa-location-dot"></i><span>Taburan Tapak</span></a>
+      <a class="nav-item" data-target="district-panel"><i class="fa-solid fa-chart-column"></i><span>Kapasiti & Penggunaan</span></a>
+      <a class="nav-item" data-target="category-panel"><i class="fa-solid fa-table-cells-large"></i><span>Jenis Perkuburan</span></a>
+      <a class="nav-item" data-target="area-panel"><i class="fa-solid fa-chart-pie"></i><span>Analisis Daerah</span></a>
+      <a class="nav-item" data-target="table-section"><i class="fa-solid fa-list"></i><span>Senarai Tapak</span></a>
+      <a class="nav-item" id="downloadCsv"><i class="fa-solid fa-download"></i><span>Muat Turun Data</span></a>
+      <a class="nav-item" id="aboutBtn"><i class="fa-solid fa-circle-info"></i><span>Mengenai</span></a>
+    </nav>
+    <div class="side-art"></div>
+    <div class="side-brand">
+      <div class="words">DATA <span>WAWASAN</span><br>DAYA TAHAN <span>MASA HADAPAN</span></div>
+      <div class="plan">PLAN<span>Malaysia</span></div>
+      <div class="plan2">@Selangor</div>
+      <div>Perancangan Mampan<br>Kelangsungan Sejahtera</div>
+    </div>
+  </aside>
+  <main class="main" id="top">
+    <section class="kpis">
+      <div class="kpi"><div class="kpi-icon"><i class="fa-solid fa-monument"></i></div><div><div class="kpi-label">Jumlah Tapak Perkuburan</div><div><span class="kpi-value" id="kTotal">222</span><span class="kpi-unit">tapak</span></div></div></div>
+      <div class="kpi"><div class="kpi-icon"><i class="fa-solid fa-draw-polygon"></i></div><div><div class="kpi-label">Jumlah Keluasan</div><div><span class="kpi-value dark" id="kArea">1,069.02</span><span class="kpi-unit">hektar</span></div></div></div>
+      <div class="kpi"><div class="kpi-icon"><i class="fa-solid fa-people-group"></i></div><div><div class="kpi-label">Tapak Islam</div><div><span class="kpi-value" id="kIslam">147</span><span class="kpi-share" id="kIslamPct">(66.2%)</span></div></div></div>
+      <div class="kpi"><div class="kpi-icon"><i class="fa-solid fa-people-group"></i></div><div><div class="kpi-label">Tapak Bukan Islam</div><div><span class="kpi-value dark" id="kNon">75</span><span class="kpi-share" id="kNonPct">(33.8%)</span></div></div></div>
+    </section>
+    <section class="filterbar">
+      <div class="filter"><label>Daerah</label><select id="fDistrict"><option value="">Semua Daerah</option></select></div>
+      <div class="filter"><label>Pihak Berkuasa Tempatan (PBT)</label><select id="fPbt"><option value="">Semua PBT</option></select></div>
+      <div class="filter"><label>Agama</label><select id="fReligion"><option value="">Semua</option></select></div>
+      <div class="filter"><label>Kategori</label><select id="fCategory"><option value="">Semua</option></select></div>
+      <button class="btn" id="resetBtn"><i class="fa-solid fa-rotate-right"></i>&nbsp;&nbsp;Reset</button>
+      <button class="btn search" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i>&nbsp;&nbsp;Cari Tapak</button>
+    </section>
+    <section class="content-grid">
+      <div class="panel map-panel" id="map-section">
+        <div class="panel-title map-title"><i class="fa-solid fa-map-location-dot"></i>Taburan Tapak Perkuburan Negeri Selangor</div>
+        <div class="map-holder">
+          <div id="map"></div>
+          <div class="map-search"><input id="mapSearch" placeholder="Cari nama tapak, lokasi atau daerah..."><i class="fa-solid fa-magnifying-glass"></i></div>
+          <div class="legend"><b>Petunjuk</b><div class="legend-row"><span class="dot red"></span>Perkuburan Islam</div><div class="legend-row"><span class="dot orange"></span>Perkuburan Bukan Islam</div><div class="legend-row"><span class="line-box"></span>Lokasi Tapak Perkuburan</div></div>
+        </div>
+      </div>
+      <div class="panel" id="district-panel"><div class="panel-title">Taburan Tapak Mengikut Daerah</div><div class="chart-wrap"><canvas id="districtChart"></canvas></div></div>
+      <div class="panel" id="religion-panel"><div class="panel-title">Jenis Tapak Perkuburan</div><div class="chart-wrap"><canvas id="religionChart"></canvas></div></div>
+      <div class="panel" id="category-panel"><div class="panel-title">Kategori Tapak Perkuburan</div><div class="chart-wrap"><canvas id="categoryChart"></canvas></div></div>
+      <div class="panel" id="area-panel"><div class="panel-title">Keluasan Tapak Mengikut Daerah</div><div class="chart-wrap"><canvas id="areaChart"></canvas></div></div>
+    </section>
+    <section class="panel table-panel" id="table-section">
+      <div class="panel-title"><i class="fa-solid fa-location-pin-lock"></i>Senarai Tapak Perkuburan <span class="right-link" id="showAll">Lihat Semua</span></div>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>Bil</th><th>Nama Tapak</th><th>Daerah</th><th>PBT</th><th>Agama</th><th>Kategori</th><th>Keluasan (ha)</th><th>Status</th></tr></thead><tbody id="tableRows"></tbody></table></div>
+    </section>
+    <div class="footer">Sumber: Data Tapak Perkuburan Negeri Selangor 2026 &nbsp; | &nbsp; Dikemaskini: 8 September 2026</div>
+  </main>
+</div>
+<script>
+const DATA = window.CEMETERY_DATA || [];
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n||0).toLocaleString('ms-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+let filtered = [...DATA], markerLayer, charts = {}, showAllRows=false;
+
+const map = L.map('map',{zoomControl:true,attributionControl:true}).setView([3.23,101.45],9);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',maxZoom:19}).addTo(map);
+L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{attribution:'',maxZoom:19,opacity:.9}).addTo(map);
+
+function uniq(key){ return [...new Set(DATA.map(d=>d[key]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b))); }
+function fillSelect(id,key){ uniq(key).forEach(v=>$(id).insertAdjacentHTML('beforeend',`<option value="${esc(v)}">${esc(v)}</option>`)); }
+fillSelect('fDistrict','Daerah'); fillSelect('fPbt','PBT'); fillSelect('fReligion','Agama'); fillSelect('fCategory','Kategori');
+
+function markerColor(r){return (r.Agama||'').toLowerCase()==='islam'?'#D51D2F':'#F5A515'}
+function renderMap(data){
+ if(markerLayer) markerLayer.remove();
+ markerLayer=L.layerGroup().addTo(map);
+ const bounds=[];
+ data.forEach(r=>{
+   const lat=Number(r.Latitude),lng=Number(r.Longitude); if(!isFinite(lat)||!isFinite(lng))return;
+   const m=L.circleMarker([lat,lng],{radius:5.5,color:'#fff',weight:1.4,fillColor:markerColor(r),fillOpacity:.96});
+   m.bindPopup(`<div style="min-width:220px"><b>${esc(r.Nama)}</b><br><span>${esc(r.Kategori)}</span><hr style="border:0;border-top:1px solid #eee"><b>Daerah:</b> ${esc(r.Daerah)}<br><b>PBT:</b> ${esc(r.PBT)}<br><b>Agama:</b> ${esc(r.Agama)}<br><b>Lokasi:</b> ${esc(r.Lokasi||'-')}<br><b>Keluasan:</b> ${fmt(r.Luas_Hek)} ha</div>`);
+   m._record=r; m.addTo(markerLayer); bounds.push([lat,lng]);
+ });
+ if(bounds.length) map.fitBounds(bounds,{padding:[24,24],maxZoom:11});
+}
+function groupCount(data,key){const m={};data.forEach(r=>m[r[key]||'Tiada Data']=(m[r[key]||'Tiada Data']||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+function groupSum(data,key){const m={};data.forEach(r=>m[r[key]||'Tiada Data']=(m[r[key]||'Tiada Data']||0)+Number(r.Luas_Hek||0));return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+function destroyChart(id){ if(charts[id]) charts[id].destroy(); }
+Chart.defaults.font.family='Inter, Arial, sans-serif'; Chart.defaults.color='#38445B';
+function drawCharts(data){
+ const district=groupCount(data,'Daerah'); destroyChart('districtChart');
+ charts.districtChart=new Chart($('districtChart'),{type:'bar',data:{labels:district.map(x=>x[0]),datasets:[{data:district.map(x=>x[1]),backgroundColor:district.map((_,i)=>`hsl(${15+i*4} 88% ${48+i*3}%)`),borderRadius:2,barThickness:13}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} tapak`}}},scales:{x:{display:false,beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:9}}}}}});
+ const rel=groupCount(data,'Agama'); destroyChart('religionChart');
+ charts.religionChart=new Chart($('religionChart'),{type:'doughnut',data:{labels:rel.map(x=>x[0]),datasets:[{data:rel.map(x=>x[1]),backgroundColor:['#E12A2C','#F6A715','#F06A20'],borderColor:'#fff',borderWidth:1,cutout:'62%'}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,usePointStyle:true,font:{size:9}}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${((c.raw/data.length)*100).toFixed(1)}%)`}}}}});
+ const cat=groupCount(data,'Kategori').slice(0,5); destroyChart('categoryChart');
+ charts.categoryChart=new Chart($('categoryChart'),{type:'bar',data:{labels:cat.map(x=>x[0].replace('Perkuburan ','').replace('Tanah ','').replace('Krematorium/Dewan Pengurusan Mayat','Krematorium')),datasets:[{data:cat.map(x=>x[1]),backgroundColor:['#D51D2F','#EA5D23','#F1A31C','#F5BD53','#F0D083'],borderRadius:2,barThickness:28}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:7.5},maxRotation:0,minRotation:0}},y:{beginAtZero:true,ticks:{font:{size:8}},grid:{color:'#EFF0F2'}}}}});
+ const area=groupSum(data,'Daerah'); destroyChart('areaChart');
+ charts.areaChart=new Chart($('areaChart'),{type:'bar',data:{labels:area.map(x=>x[0]),datasets:[{data:area.map(x=>Number(x[1].toFixed(1))),backgroundColor:area.map((_,i)=>i<2?'#F39C12':'#F6B734'),borderRadius:2,barThickness:13}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} hektar`}}},scales:{x:{beginAtZero:true,ticks:{font:{size:8}},grid:{color:'#F0F0F0'}},y:{grid:{display:false},ticks:{font:{size:8.5}}}}}});
+}
+function renderTable(data){
+ const rows=(showAllRows?data:data.slice(0,6));
+ $('tableRows').innerHTML=rows.map((r,i)=>`<tr><td>${i+1}</td><td title="${esc(r.Nama)}"><b>${esc(r.Nama)}</b></td><td>${esc(r.Daerah)}</td><td>${esc(r.PBT)}</td><td>${esc(r.Agama)}</td><td>${esc(r.Kategori)}</td><td style="text-align:right">${fmt(r.Luas_Hek)}</td><td><span class="status">Beroperasi</span></td></tr>`).join('');
+ $('showAll').textContent=showAllRows?'Paparan Ringkas':'Lihat Semua';
+}
+function updateKPIs(data){
+ const total=data.length, area=data.reduce((s,r)=>s+Number(r.Luas_Hek||0),0), islam=data.filter(r=>(r.Agama||'').toLowerCase()==='islam').length, non=total-islam;
+ $('kTotal').textContent=total.toLocaleString('ms-MY'); $('kArea').textContent=fmt(area); $('kIslam').textContent=islam.toLocaleString('ms-MY'); $('kNon').textContent=non.toLocaleString('ms-MY');
+ $('kIslamPct').textContent=`(${total?((islam/total)*100).toFixed(1):0}%)`; $('kNonPct').textContent=`(${total?((non/total)*100).toFixed(1):0}%)`;
+}
+function applyFilters(){
+ const d=$('fDistrict').value,p=$('fPbt').value,r=$('fReligion').value,c=$('fCategory').value,q=$('mapSearch').value.trim().toLowerCase();
+ filtered=DATA.filter(x=>(!d||x.Daerah===d)&&(!p||x.PBT===p)&&(!r||x.Agama===r)&&(!c||x.Kategori===c)&&(!q||[x.Nama,x.Lokasi,x.Daerah,x.PBT,x.Alamat].some(v=>String(v||'').toLowerCase().includes(q))));
+ updateKPIs(filtered);renderMap(filtered);drawCharts(filtered);renderTable(filtered);
+}
+['fDistrict','fPbt','fReligion','fCategory'].forEach(id=>$(id).addEventListener('change',applyFilters));
+$('searchBtn').addEventListener('click',applyFilters); $('mapSearch').addEventListener('keydown',e=>{if(e.key==='Enter')applyFilters()});
+$('resetBtn').addEventListener('click',()=>{['fDistrict','fPbt','fReligion','fCategory'].forEach(id=>$(id).value='');$('mapSearch').value='';applyFilters();});
+$('showAll').addEventListener('click',()=>{showAllRows=!showAllRows;renderTable(filtered)});
+
+document.querySelectorAll('.nav-item[data-target]').forEach(a=>a.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));a.classList.add('active');const t=$(a.dataset.target); if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+$('downloadCsv').addEventListener('click',()=>{const cols=['Nama','Daerah','PBT','Agama','Kategori','Lokasi','Alamat','Luas_Hek','Latitude','Longitude'];const csv=[cols.join(','),...filtered.map(r=>cols.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(','))].join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Tapak_Perkuburan_Selangor_2026.csv';a.click();URL.revokeObjectURL(a.href);});
+$('aboutBtn').addEventListener('click',()=>alert('Dashboard Tapak Perkuburan Negeri Selangor\nSelangor Urban Observatory (SUO)\nSumber data: Data Tapak Perkuburan Negeri Selangor 2026.'));
+applyFilters();
+setTimeout(()=>map.invalidateSize(),250);
+</script>
+</body>
+</html>

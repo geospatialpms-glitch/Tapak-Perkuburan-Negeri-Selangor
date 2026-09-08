@@ -1,9 +1,14 @@
-Dashboard Tapak Perkuburan Negeri Selangor 2026
+SUO Dashboard Tapak Perkuburan Negeri Selangor 2026
+
+Fail utama:
+- index.html
+- data.js
+- assets/suo-logo.jpg
+- assets/header-skyline.png
 
 Cara guna:
-1. Ekstrak ZIP.
-2. Jalankan melalui web server (contoh VS Code Live Server / GitHub Pages).
-3. Buka index.html melalui server.
+1. Upload semua fail dan folder ke root repository GitHub.
+2. Aktifkan GitHub Pages: Settings > Pages > Deploy from a branch > main / root.
+3. Dashboard menggunakan Leaflet, Chart.js, Font Awesome dan Google Fonts melalui CDN.
 
-Fail utama: index.html dan cemeteries.geojson.
-Data sumber: shapefile dibekalkan pengguna.
+Data: 222 tapak, jumlah keluasan 1,069.0218 hektar.
