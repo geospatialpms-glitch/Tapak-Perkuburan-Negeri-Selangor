@@ -8,11 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="data.js"></script>
 <style>
@@ -129,24 +126,36 @@ body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);c
   font-weight:550!important;
 }
 
-/* Marker clustering */
-.suo-cluster{background:transparent!important;border:0!important}
-.suo-cluster div{
-  width:100%;height:100%;border-radius:50%;
-  display:grid;place-items:center;
-  background:linear-gradient(145deg,rgba(216,58,67,.95),rgba(233,162,58,.94));
-  border:2px solid rgba(255,255,255,.95);
-  box-shadow:0 3px 10px rgba(18,34,57,.28);
-  color:#fff;font:800 10px/1 Inter,Arial,sans-serif;
-}
-.suo-cluster-md div{font-size:11px}
-.suo-cluster-lg div{font-size:12px}
-
 /* Less dominant GIS controls */
 .leaflet-control-layers,.leaflet-bar{
   opacity:.88;
   box-shadow:0 2px 7px rgba(15,23,42,.15)!important;
 }
+
+
+/* ===== FINAL REFINEMENT SUO / GIS ===== */
+.main{min-height:calc(100vh - 112px);padding:10px 14px 8px}
+.kpis{gap:10px;margin-bottom:7px}
+.kpi{height:76px;grid-template-columns:66px 1fr}
+.kpi-icon{font-size:31px}.kpi-label{font-size:11px;margin-bottom:3px}
+.kpi-value{font-size:28px}.kpi-unit,.kpi-share{font-size:10.5px}
+.filterbar{margin-bottom:4px;padding:7px;gap:8px}.filter select,.filter input{height:32px}.btn{height:39px}
+.active-filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px 2px}
+.active-filters:empty{display:none}
+.filter-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E4D8CC;background:#FFF9F3;color:#4B5563;border-radius:999px;padding:4px 8px 4px 9px;font-size:9.5px;font-weight:650;box-shadow:0 1px 3px rgba(45,55,72,.04)}
+.filter-chip strong{color:#B72B36;font-weight:800}.filter-chip button{border:0;background:transparent;color:#7A8492;cursor:pointer;padding:0;font-size:11px}
+.content-grid{grid-template-columns:1.82fr .84fr .84fr;grid-template-rows:258px 228px;gap:8px}
+.panel-title{font-size:12.5px}.map-search{width:255px;height:34px;border-color:#D4DAE3}
+.legend{background:rgba(17,38,68,.86);backdrop-filter:blur(2px)}
+.chart-wrap{padding:9px 10px 8px}
+.table-wrap{height:254px;overflow:auto;padding:0 9px 8px}.data-table{font-size:9.8px}
+.data-table th{position:sticky;top:0;z-index:3;background:#F5F4F2;box-shadow:0 1px 0 #E4E1DD}
+.data-table tbody tr{transition:background .12s ease}.data-table tbody tr:hover{background:#FFF7ED}.data-table tbody tr:hover td{color:#17213A}
+.footer{font-size:10px;color:#626B7A;padding:8px 4px 2px}
+.side-brand{left:5px!important;right:5px!important;bottom:8px!important}
+.side-brand .official-logo{width:100%!important;max-width:202px!important;height:auto!important;object-fit:contain!important}
+.boundary-label{color:#4B5563!important;background:rgba(248,250,252,.60)!important;border-color:rgba(75,85,99,.12)!important}
+.boundary-label.pbt-label{color:#6B7280!important;background:rgba(248,250,252,.52)!important;border-color:rgba(107,114,128,.10)!important}
 
 </style>
 </head>
@@ -192,6 +201,7 @@ body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);c
       <button class="btn" id="resetBtn"><i class="fa-solid fa-rotate-right"></i>&nbsp;&nbsp;Reset</button>
       <button class="btn search" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i>&nbsp;&nbsp;Cari Tapak</button>
     </section>
+    <div class="active-filters" id="activeFilters" aria-live="polite"></div>
     <section class="content-grid">
       <div class="panel map-panel" id="map-section">
         <div class="panel-title map-title"><i class="fa-solid fa-map-location-dot"></i>Taburan Tapak Perkuburan Negeri Selangor</div>
@@ -228,7 +238,7 @@ const SUO_CATEGORY = ['#D83A43','#E9683A','#E9A23A','#79B768','#4F94A6','#5B7FC5
 // Doughnut kekal jelas tetapi lebih matang untuk paparan rasmi.
 const SUO_PIE = ['#D83A43','#E9A23A','#4CA78A','#5B7FC5','#A0609E','#E9683A','#D9B83E'];
 const pickPalette = (n, palette=SUO_RGB) => Array.from({length:n},(_,i)=>palette[i % palette.length]);
-let filtered = [...DATA], markerLayer, charts = {}, showAllRows=false;
+let filtered = [...DATA], markerLayer, markerLookup = [], charts = {}, showAllRows=false;
 
 const map = L.map('map',{zoomControl:true,attributionControl:true}).setView([3.23,101.45],9);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',maxZoom:19}).addTo(map);
@@ -316,52 +326,42 @@ fillSelect('fDistrict','Daerah'); fillSelect('fPbt','PBT'); fillSelect('fReligio
 function markerColor(r){return (r.Agama||'').toLowerCase()==='islam'?'#D83A43':'#E9A23A'}
 function renderMap(data){
  if(markerLayer) map.removeLayer(markerLayer);
- markerLayer=L.markerClusterGroup({
-   showCoverageOnHover:false,
-   spiderfyOnMaxZoom:true,
-   disableClusteringAtZoom:13,
-   maxClusterRadius:42,
-   iconCreateFunction:function(cluster){
-     const count=cluster.getChildCount();
-     const size=count>=50?'lg':count>=20?'md':'sm';
-     return L.divIcon({
-       html:`<div><span>${count}</span></div>`,
-       className:`suo-cluster suo-cluster-${size}`,
-       iconSize:L.point(size==='lg'?44:size==='md'?38:32,size==='lg'?44:size==='md'?38:32)
-     });
-   }
- }).addTo(map);
+ markerLayer=L.layerGroup().addTo(map);
+ markerLookup=[];
  const bounds=[];
  data.forEach(r=>{
    const lat=Number(r.Latitude),lng=Number(r.Longitude); if(!isFinite(lat)||!isFinite(lng))return;
-   const m=L.circleMarker([lat,lng],{radius:5.2,color:'#fff',weight:1.25,fillColor:markerColor(r),fillOpacity:.93});
+   const m=L.circleMarker([lat,lng],{radius:5.0,color:'#fff',weight:1.15,fillColor:markerColor(r),fillOpacity:.92});
    m.bindPopup(`<div style="min-width:220px"><b>${esc(r.Nama)}</b><br><span>${esc(r.Kategori)}</span><hr style="border:0;border-top:1px solid #eee"><b>Daerah:</b> ${esc(r.Daerah)}<br><b>PBT:</b> ${esc(r.PBT)}<br><b>Agama:</b> ${esc(r.Agama)}<br><b>Lokasi:</b> ${esc(r.Lokasi||'-')}<br><b>Keluasan:</b> ${fmt(r.Luas_Hek)} ha</div>`);
-   m._record=r; markerLayer.addLayer(m); bounds.push([lat,lng]);
+   m._record=r;m.addTo(markerLayer);markerLookup.push({record:r,marker:m,lat,lng});bounds.push([lat,lng]);
  });
- // Paparan penuh fokus Negeri Selangor; selepas filter, fokus pada hasil carian.
- if(data.length===DATA.length && districtBoundaryLayer){
-   map.fitBounds(districtBoundaryLayer.getBounds(),{padding:[18,18],maxZoom:10});
- }else if(bounds.length){
-   map.fitBounds(bounds,{padding:[30,30],maxZoom:12});
- }
+ if(data.length===DATA.length && districtBoundaryLayer) map.fitBounds(districtBoundaryLayer.getBounds(),{padding:[8,8],maxZoom:10});
+ else if(bounds.length) map.fitBounds(bounds,{padding:[24,24],maxZoom:12});
 }
 function groupCount(data,key){const m={};data.forEach(r=>m[r[key]||'Tiada Data']=(m[r[key]||'Tiada Data']||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
 function groupSum(data,key){const m={};data.forEach(r=>m[r[key]||'Tiada Data']=(m[r[key]||'Tiada Data']||0)+Number(r.Luas_Hek||0));return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
 function destroyChart(id){ if(charts[id]) charts[id].destroy(); }
 Chart.defaults.font.family='Inter, Arial, sans-serif'; Chart.defaults.color='#38445B';
+const centerTextPlugin={id:'centerText',afterDraw(chart,args,opts){
+ if(!opts||!opts.text||chart.config.type!=='doughnut')return;
+ const a=chart.chartArea,ctx=chart.ctx,x=(a.left+a.right)/2,y=(a.top+a.bottom)/2;
+ ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#17213A';ctx.font='800 21px Inter,Arial,sans-serif';ctx.fillText(opts.text,x,y-5);
+ ctx.fillStyle='#687087';ctx.font='650 9.5px Inter,Arial,sans-serif';ctx.fillText(opts.subtext||'',x,y+15);ctx.restore();
+}};
+Chart.register(centerTextPlugin);
 function drawCharts(data){
  const district=groupCount(data,'Daerah'); destroyChart('districtChart');
  charts.districtChart=new Chart($('districtChart'),{type:'bar',data:{labels:district.map(x=>x[0]),datasets:[{data:district.map(x=>x[1]),backgroundColor:pickPalette(district.length),hoverBackgroundColor:pickPalette(district.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:1,borderRadius:4,barThickness:13}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,displayColors:true,callbacks:{label:c=>`${c.raw} tapak`}}},scales:{x:{display:false,beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:9}}}}}});
  const rel=groupCount(data,'Agama'); destroyChart('religionChart');
- charts.religionChart=new Chart($('religionChart'),{type:'doughnut',data:{labels:rel.map(x=>x[0]),datasets:[{data:rel.map(x=>x[1]),backgroundColor:pickPalette(rel.length,SUO_PIE),hoverBackgroundColor:pickPalette(rel.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:3,hoverBorderColor:'#FFFFFF',hoverOffset:7,cutout:'62%'}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,usePointStyle:true,font:{size:9}}},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,callbacks:{label:c=>`${c.label}: ${c.raw} (${((c.raw/data.length)*100).toFixed(1)}%)`}}}}});
+ charts.religionChart=new Chart($('religionChart'),{type:'doughnut',data:{labels:rel.map(x=>x[0]),datasets:[{data:rel.map(x=>x[1]),backgroundColor:pickPalette(rel.length,SUO_PIE),hoverBackgroundColor:pickPalette(rel.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:3,hoverBorderColor:'#FFFFFF',hoverOffset:7,cutout:'62%'}]},options:{maintainAspectRatio:false,plugins:{centerText:{text:data.length.toLocaleString('ms-MY'),subtext:'tapak'},legend:{position:'right',labels:{boxWidth:10,usePointStyle:true,font:{size:9}}},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,callbacks:{label:c=>`${c.label}: ${c.raw} (${((c.raw/data.length)*100).toFixed(1)}%)`}}}}});
  const cat=groupCount(data,'Kategori').slice(0,5); destroyChart('categoryChart');
- charts.categoryChart=new Chart($('categoryChart'),{type:'bar',data:{labels:cat.map(x=>x[0].replace('Perkuburan ','').replace('Tanah ','').replace('Krematorium/Dewan Pengurusan Mayat','Krematorium')),datasets:[{data:cat.map(x=>x[1]),backgroundColor:pickPalette(cat.length,SUO_CATEGORY),hoverBackgroundColor:pickPalette(cat.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:1,borderRadius:4,barThickness:28}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,callbacks:{label:c=>`${c.raw} tapak`}}},scales:{x:{grid:{display:false},ticks:{font:{size:7.5},maxRotation:0,minRotation:0}},y:{beginAtZero:true,ticks:{font:{size:8}},grid:{color:'#E8ECF3'}}}}});
+ charts.categoryChart=new Chart($('categoryChart'),{type:'bar',data:{labels:cat.map(x=>x[0].replace('Perkuburan ','').replace('Tanah ','').replace('Krematorium/Dewan Pengurusan Mayat','Krematorium')),datasets:[{data:cat.map(x=>x[1]),backgroundColor:pickPalette(cat.length,SUO_CATEGORY),hoverBackgroundColor:pickPalette(cat.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:1,borderRadius:4,barThickness:28}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,callbacks:{label:c=>`${c.raw} tapak`}}},scales:{x:{grid:{display:false},ticks:{font:{size:7.5},maxRotation:0,minRotation:0}},y:{beginAtZero:true,ticks:{font:{size:8}},grid:{color:'rgba(148,163,184,.20)'}}}}});
  const area=groupSum(data,'Daerah'); destroyChart('areaChart');
- charts.areaChart=new Chart($('areaChart'),{type:'bar',data:{labels:area.map(x=>x[0]),datasets:[{data:area.map(x=>Number(x[1].toFixed(1))),backgroundColor:pickPalette(area.length,SUO_RGB),hoverBackgroundColor:pickPalette(area.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:1,borderRadius:4,barThickness:13}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,callbacks:{label:c=>`${fmt(c.raw)} hektar`}}},scales:{x:{beginAtZero:true,ticks:{font:{size:8}},grid:{color:'#E8ECF3'}},y:{grid:{display:false},ticks:{font:{size:8.5}}}}}});
+ charts.areaChart=new Chart($('areaChart'),{type:'bar',data:{labels:area.map(x=>x[0]),datasets:[{data:area.map(x=>Number(x[1].toFixed(1))),backgroundColor:pickPalette(area.length,SUO_RGB),hoverBackgroundColor:pickPalette(area.length,SUO_RGB_SOFT),borderColor:'#FFFFFF',borderWidth:1,borderRadius:4,barThickness:13}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#15213F',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',borderColor:'#FFD118',borderWidth:1,callbacks:{label:c=>`${fmt(c.raw)} hektar`}}},scales:{x:{beginAtZero:true,ticks:{font:{size:8}},grid:{color:'rgba(148,163,184,.20)'}},y:{grid:{display:false},ticks:{font:{size:8.5}}}}}});
 }
 function renderTable(data){
- const rows=(showAllRows?data:data.slice(0,6));
- $('tableRows').innerHTML=rows.map((r,i)=>`<tr><td>${i+1}</td><td title="${esc(r.Nama)}"><b>${esc(r.Nama)}</b></td><td>${esc(r.Daerah)}</td><td>${esc(r.PBT)}</td><td>${esc(r.Agama)}</td><td>${esc(r.Kategori)}</td><td style="text-align:right">${fmt(r.Luas_Hek)}</td><td><span class="status">Beroperasi</span></td></tr>`).join('');
+ const rows=(showAllRows?data:data.slice(0,10));
+ $('tableRows').innerHTML=rows.map((r,i)=>`<tr data-lat="${Number(r.Latitude)}" data-lng="${Number(r.Longitude)}" title="Klik untuk fokus lokasi pada peta" style="cursor:pointer"><td>${i+1}</td><td title="${esc(r.Nama)}"><b>${esc(r.Nama)}</b></td><td>${esc(r.Daerah)}</td><td>${esc(r.PBT)}</td><td>${esc(r.Agama)}</td><td>${esc(r.Kategori)}</td><td style="text-align:right">${fmt(r.Luas_Hek)}</td><td><span class="status">Beroperasi</span></td></tr>`).join('');
  $('showAll').textContent=showAllRows?'Paparan Ringkas':'Lihat Semua';
 }
 function updateKPIs(data){
@@ -369,15 +369,33 @@ function updateKPIs(data){
  $('kTotal').textContent=total.toLocaleString('ms-MY'); $('kArea').textContent=fmt(area); $('kIslam').textContent=islam.toLocaleString('ms-MY'); $('kNon').textContent=non.toLocaleString('ms-MY');
  $('kIslamPct').textContent=`(${total?((islam/total)*100).toFixed(1):0}%)`; $('kNonPct').textContent=`(${total?((non/total)*100).toFixed(1):0}%)`;
 }
+function renderFilterChips(d,p,r,c,q){
+ const host=$('activeFilters'),chips=[];
+ if(d)chips.push({key:'fDistrict',label:'Daerah',value:d});if(p)chips.push({key:'fPbt',label:'PBT',value:p});
+ if(r)chips.push({key:'fReligion',label:'Agama',value:r});if(c)chips.push({key:'fCategory',label:'Kategori',value:c});
+ if(q)chips.push({key:'mapSearch',label:'Carian',value:q});
+ host.innerHTML=chips.map(x=>`<span class="filter-chip"><strong>${x.label}:</strong> ${esc(x.value)} <button type="button" data-clear="${x.key}" title="Buang penapis">×</button></span>`).join('');
+}
+function focusSearchResult(q){
+ if(!q||!markerLookup.length)return;
+ const needle=q.toLowerCase();
+ let hit=markerLookup.find(x=>String(x.record.Nama||'').toLowerCase()===needle)||markerLookup.find(x=>String(x.record.Nama||'').toLowerCase().includes(needle))||markerLookup[0];
+ map.flyTo([hit.lat,hit.lng],15,{duration:.65});setTimeout(()=>hit.marker.openPopup(),700);
+}
 function applyFilters(){
- const d=$('fDistrict').value,p=$('fPbt').value,r=$('fReligion').value,c=$('fCategory').value,q=$('mapSearch').value.trim().toLowerCase();
+ const d=$('fDistrict').value,p=$('fPbt').value,r=$('fReligion').value,c=$('fCategory').value,qRaw=$('mapSearch').value.trim(),q=qRaw.toLowerCase();
  filtered=DATA.filter(x=>(!d||x.Daerah===d)&&(!p||x.PBT===p)&&(!r||x.Agama===r)&&(!c||x.Kategori===c)&&(!q||[x.Nama,x.Lokasi,x.Daerah,x.PBT,x.Alamat].some(v=>String(v||'').toLowerCase().includes(q))));
- updateKPIs(filtered);renderMap(filtered);drawCharts(filtered);renderTable(filtered); const active=document.querySelector('.nav-item.active'); if(active && ['area','types','district','download','about'].includes(active.dataset.view)) renderModule(active.dataset.view);
+ updateKPIs(filtered);renderMap(filtered);drawCharts(filtered);renderTable(filtered);renderFilterChips(d,p,r,c,qRaw);
+ if(q&&filtered.length)focusSearchResult(q);
+ const active=document.querySelector('.nav-item.active');if(active&&['area','types','district','download','about'].includes(active.dataset.view))renderModule(active.dataset.view);
 }
 ['fDistrict','fPbt','fReligion','fCategory'].forEach(id=>$(id).addEventListener('change',applyFilters));
 $('searchBtn').addEventListener('click',applyFilters); $('mapSearch').addEventListener('keydown',e=>{if(e.key==='Enter')applyFilters()});
 $('resetBtn').addEventListener('click',()=>{['fDistrict','fPbt','fReligion','fCategory'].forEach(id=>$(id).value='');$('mapSearch').value='';applyFilters();});
 $('showAll').addEventListener('click',()=>{showAllRows=!showAllRows;renderTable(filtered)});
+$('activeFilters').addEventListener('click',e=>{const b=e.target.closest('button[data-clear]');if(!b)return;const k=b.dataset.clear;if(k==='mapSearch')$('mapSearch').value='';else if($(k))$(k).value='';applyFilters();});
+$('tableRows').addEventListener('click',e=>{const tr=e.target.closest('tr[data-lat][data-lng]');if(!tr)return;const lat=Number(tr.dataset.lat),lng=Number(tr.dataset.lng);if(!isFinite(lat)||!isFinite(lng))return;const hit=markerLookup.find(x=>Math.abs(x.lat-lat)<1e-8&&Math.abs(x.lng-lng)<1e-8);map.flyTo([lat,lng],15,{duration:.6});if(hit)setTimeout(()=>hit.marker.openPopup(),650);});
+
 
 const homeSections=[document.querySelector('.kpis'),document.querySelector('.content-grid'),document.querySelector('.table-panel')];
 let moduleCharts={};
