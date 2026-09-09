@@ -8,8 +8,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="data.js"></script>
 <style>
@@ -93,6 +96,58 @@ body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);c
   background:rgba(255,255,255,.68)!important;
 }
 
+
+/* ===== REFINEMENT GIS / PREMIUM ===== */
+.main{min-height:calc(100vh - 124px);padding-bottom:12px}
+.content-grid{grid-template-rows:290px 250px}
+.table-wrap{height:220px}
+.side-brand{left:7px!important;right:7px!important;bottom:10px!important}
+.side-brand .official-logo{
+  width:100%!important;
+  max-width:198px!important;
+  height:auto!important;
+  border-radius:13px!important;
+  box-shadow:0 4px 14px rgba(87,60,30,.11)!important;
+}
+.side-art{bottom:150px!important;opacity:.72!important}
+
+/* Boundary labels: neutral, subtle, no visual competition with markers */
+.boundary-label{
+  background:rgba(248,250,252,.66)!important;
+  border:1px solid rgba(75,85,99,.14)!important;
+  color:#4B5563!important;
+  font-size:8.5px!important;
+  font-weight:650!important;
+  padding:2px 5px!important;
+  box-shadow:0 1px 2px rgba(15,23,42,.05)!important;
+}
+.boundary-label.pbt-label{
+  background:rgba(248,250,252,.58)!important;
+  border-color:rgba(107,114,128,.12)!important;
+  color:#6B7280!important;
+  font-size:8px!important;
+  font-weight:550!important;
+}
+
+/* Marker clustering */
+.suo-cluster{background:transparent!important;border:0!important}
+.suo-cluster div{
+  width:100%;height:100%;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(216,58,67,.95),rgba(233,162,58,.94));
+  border:2px solid rgba(255,255,255,.95);
+  box-shadow:0 3px 10px rgba(18,34,57,.28);
+  color:#fff;font:800 10px/1 Inter,Arial,sans-serif;
+}
+.suo-cluster-md div{font-size:11px}
+.suo-cluster-lg div{font-size:12px}
+
+/* Less dominant GIS controls */
+.leaflet-control-layers,.leaflet-bar{
+  opacity:.88;
+  box-shadow:0 2px 7px rgba(15,23,42,.15)!important;
+}
+
 </style>
 </head>
 <body>
@@ -167,11 +222,11 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;',
 
 // Palet RGB pelangi harmonik seperti rujukan pengguna:
 // merah → jingga → kuning → hijau → teal → biru → ungu → magenta
-const SUO_RGB = ['#F0182A','#FF5A16','#FF9818','#FFD118','#8DE22D','#14B84B','#129D97','#2456F5','#5B2CC7','#A529A5'];
-const SUO_RGB_SOFT = ['#FF5260','#FF824C','#FFB24F','#FFE05D','#A9EC65','#50CD78','#4ABCB7','#5E7CFA','#8561D8','#C35BBF'];
-const SUO_CATEGORY = ['#F0182A','#FF5A16','#FFC219','#78D936','#2456F5','#5B2CC7','#A529A5'];
-// Doughnut sengaja dua warna kontras supaya kategori cepat dibaca.
-const SUO_PIE = ['#F0182A','#FFB619','#14B84B','#2456F5','#A529A5','#FF5A16','#FFD118'];
+const SUO_RGB = ['#D83A43','#E9683A','#E99B35','#D9B83E','#7DBB67','#4CA78A','#4F94A6','#5B7FC5','#7762B7','#A0609E'];
+const SUO_RGB_SOFT = ['#E7656B','#EE8A67','#F0B15E','#E5CB69','#9CCC8B','#75BCA5','#78ADBA','#7C9BD2','#9482C7','#B77DAF'];
+const SUO_CATEGORY = ['#D83A43','#E9683A','#E9A23A','#79B768','#4F94A6','#5B7FC5','#7762B7'];
+// Doughnut kekal jelas tetapi lebih matang untuk paparan rasmi.
+const SUO_PIE = ['#D83A43','#E9A23A','#4CA78A','#5B7FC5','#A0609E','#E9683A','#D9B83E'];
 const pickPalette = (n, palette=SUO_RGB) => Array.from({length:n},(_,i)=>palette[i % palette.length]);
 let filtered = [...DATA], markerLayer, charts = {}, showAllRows=false;
 
@@ -191,8 +246,8 @@ const PBT_LABELS = [{"name":"Majlis Daerah Sabak Bernam","lat":3.677641455983304
 const districtBoundaryLayer = L.geoJSON(DISTRICT_GEOJSON,{
   style:()=>({
     color:'#4B5563',
-    weight:1.35,
-    opacity:.68,
+    weight:1.15,
+    opacity:.58,
     fill:false,
     dashArray:'1 5',
     lineCap:'round',
@@ -203,8 +258,8 @@ const districtBoundaryLayer = L.geoJSON(DISTRICT_GEOJSON,{
 const pbtBoundaryLayer = L.geoJSON(PBT_GEOJSON,{
   style:()=>({
     color:'#6B7280',
-    weight:1.05,
-    opacity:.54,
+    weight:.9,
+    opacity:.44,
     fill:false,
     dashArray:'1 3 1 7',
     lineCap:'round',
@@ -221,7 +276,7 @@ const districtLabelLayer = L.layerGroup(
       iconSize:null
     })
   }))
-).addTo(map);
+);
 
 const pbtLabelLayer = L.layerGroup(
   PBT_LABELS.map(x=>L.marker([x.lat,x.lng],{
@@ -232,14 +287,25 @@ const pbtLabelLayer = L.layerGroup(
       iconSize:null
     })
   }))
-).addTo(map);
+);
 
-// Layer control supaya sempadan boleh dihidup/matikan.
+// Label boundary dikawal ikut zoom supaya peta tidak berserabut.
+function syncBoundaryLabels(){
+  const z=map.getZoom();
+  if(z>=9){
+    if(!map.hasLayer(districtLabelLayer)) districtLabelLayer.addTo(map);
+  }else if(map.hasLayer(districtLabelLayer)) map.removeLayer(districtLabelLayer);
+
+  if(z>=11){
+    if(!map.hasLayer(pbtLabelLayer)) pbtLabelLayer.addTo(map);
+  }else if(map.hasLayer(pbtLabelLayer)) map.removeLayer(pbtLabelLayer);
+}
+map.on('zoomend',syncBoundaryLabels);
+syncBoundaryLabels();
+
 L.control.layers(null,{
   'Sempadan Daerah':districtBoundaryLayer,
-  'Label Daerah':districtLabelLayer,
-  'Sempadan PBT':pbtBoundaryLayer,
-  'Label PBT':pbtLabelLayer
+  'Sempadan PBT':pbtBoundaryLayer
 },{collapsed:true,position:'topright'}).addTo(map);
 
 
@@ -247,18 +313,37 @@ function uniq(key){ return [...new Set(DATA.map(d=>d[key]).filter(Boolean))].sor
 function fillSelect(id,key){ uniq(key).forEach(v=>$(id).insertAdjacentHTML('beforeend',`<option value="${esc(v)}">${esc(v)}</option>`)); }
 fillSelect('fDistrict','Daerah'); fillSelect('fPbt','PBT'); fillSelect('fReligion','Agama'); fillSelect('fCategory','Kategori');
 
-function markerColor(r){return (r.Agama||'').toLowerCase()==='islam'?'#F0182A':'#FFB619'}
+function markerColor(r){return (r.Agama||'').toLowerCase()==='islam'?'#D83A43':'#E9A23A'}
 function renderMap(data){
- if(markerLayer) markerLayer.remove();
- markerLayer=L.layerGroup().addTo(map);
+ if(markerLayer) map.removeLayer(markerLayer);
+ markerLayer=L.markerClusterGroup({
+   showCoverageOnHover:false,
+   spiderfyOnMaxZoom:true,
+   disableClusteringAtZoom:13,
+   maxClusterRadius:42,
+   iconCreateFunction:function(cluster){
+     const count=cluster.getChildCount();
+     const size=count>=50?'lg':count>=20?'md':'sm';
+     return L.divIcon({
+       html:`<div><span>${count}</span></div>`,
+       className:`suo-cluster suo-cluster-${size}`,
+       iconSize:L.point(size==='lg'?44:size==='md'?38:32,size==='lg'?44:size==='md'?38:32)
+     });
+   }
+ }).addTo(map);
  const bounds=[];
  data.forEach(r=>{
    const lat=Number(r.Latitude),lng=Number(r.Longitude); if(!isFinite(lat)||!isFinite(lng))return;
-   const m=L.circleMarker([lat,lng],{radius:5.5,color:'#fff',weight:1.4,fillColor:markerColor(r),fillOpacity:.96});
+   const m=L.circleMarker([lat,lng],{radius:5.2,color:'#fff',weight:1.25,fillColor:markerColor(r),fillOpacity:.93});
    m.bindPopup(`<div style="min-width:220px"><b>${esc(r.Nama)}</b><br><span>${esc(r.Kategori)}</span><hr style="border:0;border-top:1px solid #eee"><b>Daerah:</b> ${esc(r.Daerah)}<br><b>PBT:</b> ${esc(r.PBT)}<br><b>Agama:</b> ${esc(r.Agama)}<br><b>Lokasi:</b> ${esc(r.Lokasi||'-')}<br><b>Keluasan:</b> ${fmt(r.Luas_Hek)} ha</div>`);
-   m._record=r; m.addTo(markerLayer); bounds.push([lat,lng]);
+   m._record=r; markerLayer.addLayer(m); bounds.push([lat,lng]);
  });
- if(bounds.length) map.fitBounds(bounds,{padding:[24,24],maxZoom:11});
+ // Paparan penuh fokus Negeri Selangor; selepas filter, fokus pada hasil carian.
+ if(data.length===DATA.length && districtBoundaryLayer){
+   map.fitBounds(districtBoundaryLayer.getBounds(),{padding:[18,18],maxZoom:10});
+ }else if(bounds.length){
+   map.fitBounds(bounds,{padding:[30,30],maxZoom:12});
+ }
 }
 function groupCount(data,key){const m={};data.forEach(r=>m[r[key]||'Tiada Data']=(m[r[key]||'Tiada Data']||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
 function groupSum(data,key){const m={};data.forEach(r=>m[r[key]||'Tiada Data']=(m[r[key]||'Tiada Data']||0)+Number(r.Luas_Hek||0));return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
