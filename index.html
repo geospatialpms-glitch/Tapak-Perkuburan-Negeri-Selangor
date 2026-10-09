@@ -217,7 +217,50 @@ body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);c
 .side-brand .agency-plan span{color:#178047}
 .side-brand .agency-motto{font-family:Arial,sans-serif;font-size:8px;line-height:1.4;color:#3f3f46}
 </style>
-</head>
+<style>
+/* SUO: logo rasmi di bawah kiri, sejajar dengan penamat kandungan/jadual */
+.app { align-items: stretch !important; }
+.sidebar {
+  display:flex !important;
+  flex-direction:column !important;
+  align-self:stretch !important;
+  height:auto !important;
+  min-height:100% !important;
+  overflow:visible !important;
+  box-sizing:border-box !important;
+}
+.side-nav { flex:0 0 auto !important; }
+.side-art { display:none !important; }
+.sidebar .side-brand {
+  position:static !important;
+  inset:auto !important;
+  display:block !important;
+  flex:0 0 auto !important;
+  width:100% !important;
+  margin:auto 0 0 !important;
+  padding:18px 0 0 !important;
+  transform:none !important;
+  box-sizing:border-box !important;
+  z-index:2;
+}
+.sidebar .agency-card {
+  width:100% !important;
+  max-width:100% !important;
+  padding:12px 7px !important;
+  margin:0 auto !important;
+  box-sizing:border-box !important;
+}
+.sidebar .selangor-crest{
+  display:block !important;
+  margin:0 auto 7px !important;
+  max-width:74px !important;
+  height:auto !important;
+  object-fit:contain !important;
+}
+@media(max-width:800px){
+  .sidebar .side-brand {margin-top:24px !important;}
+}
+</style></head>
 <body>
 <header class="topbar">
   <div class="top-brand">
@@ -239,7 +282,6 @@ body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);c
       <a class="nav-item" data-view="types"><i class="fa-solid fa-table-cells-large"></i><span>Jenis Perkuburan</span></a>
       <a class="nav-item" data-view="district"><i class="fa-solid fa-chart-pie"></i><span>Analisis Daerah</span></a>
       <a class="nav-item" data-view="list"><i class="fa-solid fa-list"></i><span>Senarai Tapak</span></a>
-      <a class="nav-item" data-view="download"><i class="fa-solid fa-download"></i><span>Muat Turun Data</span></a>
       <a class="nav-item" data-view="about"><i class="fa-solid fa-circle-info"></i><span>Mengenai</span></a>
     </nav>
     <div class="side-art"></div>
