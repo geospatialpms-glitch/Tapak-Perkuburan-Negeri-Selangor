@@ -696,28 +696,35 @@ function renderModule(view){destroyModuleCharts();setHomeVisible(false);const mv
          ctx.restore();
        }
        if(chart.canvas.id==='moduleDistrictReligion'){
-         const labels = chart.data.labels || [];
          const islamMeta = chart.getDatasetMeta(0);
          const nonMeta = chart.getDatasetMeta(1);
          ctx.save();
          ctx.textAlign='center';
          ctx.textBaseline='middle';
-         ctx.font='700 11px Inter,Arial,sans-serif';
-         ctx.fillStyle='#17213A';
-         labels.forEach((_,i)=>{
-           const top = nonMeta.data[i] || islamMeta.data[i];
-           const totalBar = (Number(chart.data.datasets[0].data[i])||0)+(Number(chart.data.datasets[1].data[i])||0);
-           if(top) ctx.fillText(String(totalBar), top.x, top.y - top.height/2 - 12);
-           const a = islamMeta.data[i], b = nonMeta.data[i];
-           if(a && a.height > 18){
-             ctx.fillStyle = '#FFFFFF';
-             ctx.fillText(String(chart.data.datasets[0].data[i]), a.x, a.y);
-           }
-           if(b && b.height > 18){
-             ctx.fillStyle = '#2D3748';
-             ctx.fillText(String(chart.data.datasets[1].data[i]), b.x, b.y);
-           }
+         chart.data.labels.forEach((_,i)=>{
+           const isl=Number(chart.data.datasets[0].data[i])||0;
+           const non=Number(chart.data.datasets[1].data[i])||0;
+           const first=islamMeta.data[i], second=nonMeta.data[i];
+           if(!first && !second) return;
+           // Chart.js bar.y ialah tepi atas segmen, bar.base tepi bawah.
+           // Teks di tengah secara matematik, tanpa mengguna bar.height.
+           const paint=(element,value,light)=>{
+             if(!element || value<=0) return;
+             const pos=element.getProps(['x','y','base','width'],true);
+             const h=Math.abs(pos.base-pos.y);
+             if(h<11) return;
+             ctx.font=h<19?'700 9px Inter,Arial,sans-serif':'800 11px Inter,Arial,sans-serif';
+             ctx.fillStyle=light?'#334155':'#FFFFFF';
+             ctx.fillText(String(value),pos.x,(pos.y+pos.base)/2+1);
+           };
+           paint(first,isl,false);
+           paint(second,non,true);
+           // Jumlah bagi kedua-dua bahagian diletak di atas stack.
+           const top=non>0?second:first;
+           const topPos=top.getProps(['x','y'],true);
+           ctx.font='800 11px Inter,Arial,sans-serif';
            ctx.fillStyle='#17213A';
+           ctx.fillText(String(isl+non),topPos.x,topPos.y-11);
          });
          ctx.restore();
        }
@@ -761,7 +768,7 @@ function renderModule(view){destroyModuleCharts();setHomeVisible(false);const mv
      plugins:[districtLabelPlugin],
      options:{
        maintainAspectRatio:false,
-       layout:{padding:{top:18,right:10,left:6,bottom:0}},
+       layout:{padding:{top:25,right:10,left:6,bottom:2}},
        plugins:{
          legend:{display:true,position:'top',align:'end',labels:{boxWidth:12,padding:16,color:'#364258',font:{size:12}}},
          tooltip:{
