@@ -559,7 +559,7 @@ function renderModule(view){destroyModuleCharts();setHomeVisible(false);const mv
    <div class="module-stats type-enhanced-stats">${agama.map(([name,n],i)=>`<div class="module-stat"><div class="label">${esc(name.toUpperCase())}</div><div class="value">${n} <small class="type-stat-pct">${pct(n,total)}%</small></div><div class="sub">${fmt(kawasan[i][1])} ha · ${pct(kawasan[i][1],areaTotal)}% daripada keluasan</div></div>`).join('')}</div>
    <div class="module-grid type-enhanced-grid">
      <div class="module-card"><div class="module-card-title">Pecahan Mengikut Agama</div><div class="module-card-body module-chart type-upper-chart"><canvas id="moduleReligion"></canvas></div></div>
-     <div class="module-card"><div class="module-card-title">Keluasan Perkuburan Mengikut Agama <span class="type-unit">hektar (ha)</span></div><div class="module-card-body module-chart type-upper-chart"><canvas id="moduleReligionArea"></canvas></div></div>
+     <div class="module-card"><div class="module-card-title">Keluasan Perkuburan Mengikut Agama</div><div class="module-card-body module-chart type-upper-chart"><canvas id="moduleReligionArea"></canvas></div></div>
      <div class="module-card full type-category-card"><div class="module-card-title">Taburan Mengikut 8 Kategori Tapak Perkuburan <span class="type-chart-meta">8 kategori · ${total} tapak dipaparkan</span></div><div class="module-card-body type-category-chart"><canvas id="moduleCategoryEight"></canvas></div></div>
    </div>`;
 
