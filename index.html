@@ -238,6 +238,26 @@ body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);c
  .type-upper-chart{height:290px}
  .type-enhanced-grid .type-category-chart{height:400px}
 }
+
+/* Analisis Daerah - versi mockup dipertingkat */
+.district-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.district-enhanced-grid{grid-template-columns:1fr 1fr;gap:12px}
+.district-enhanced-grid .module-card.full{grid-column:1/-1}
+.district-half-chart{height:270px;min-height:270px}
+.district-stack-chart{height:250px;min-height:250px}
+.district-chart-meta{float:right;color:#718096;font-size:11px;font-weight:600;margin-right:8px}
+.district-table tfoot th,.district-table tfoot td{background:#FAF7F2;font-weight:800;color:#17213A}
+@media(max-width:980px){
+  .district-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .district-enhanced-grid{grid-template-columns:1fr}
+  .district-enhanced-grid .module-card.full{grid-column:1}
+}
+@media(max-width:560px){
+  .district-kpis{grid-template-columns:1fr}
+  .district-half-chart{height:300px}
+  .district-stack-chart{height:320px}
+}
+
 </style>
 <style>
 .side-brand .agency-card{box-sizing:border-box;width:100%;padding:12px 7px 15px;border-radius:12px;background:linear-gradient(165deg,#fffefa 65%,#fff4d8);border:1px solid #f0e5c7;box-shadow:0 4px 13px rgba(80,56,23,.1);text-align:center;display:flex;align-items:center;flex-direction:column;gap:4px}
@@ -619,12 +639,150 @@ function renderModule(view){destroyModuleCharts();setHomeVisible(false);const mv
        scales:{x:{beginAtZero:true,grid:{color:'rgba(148,163,184,.17)'},ticks:{precision:0,color:'#64748B'}},
        y:{grid:{display:false},ticks:{autoSkip:false,color:'#344054',font:{size:11},padding:8}}}}
    });
- } else if(view==='district'){
-   const dcount=groupCount(filtered,'Daerah'), darea=Object.fromEntries(groupSum(filtered,'Daerah')); const rows=dcount.map(([d,c])=>{const subset=filtered.filter(r=>r.Daerah===d), isl=subset.filter(r=>(r.Agama||'').toLowerCase()==='islam').length;return {d,c,a:darea[d]||0,avg:(darea[d]||0)/c,isl,non:c-isl}}).sort((a,b)=>b.c-a.c);
-   mv.innerHTML=`<div class="module-head"><div><h2>Analisis Daerah</h2><p>Perbandingan jumlah tapak, keluasan dan komposisi agama untuk setiap daerah.</p></div><div class="module-badge">${rows.length} daerah</div></div><div class="module-grid"><div class="module-card"><div class="module-card-title">Jumlah Tapak Mengikut Daerah</div><div class="module-card-body module-chart"><canvas id="moduleDistrictCount"></canvas></div></div><div class="module-card"><div class="module-card-title">Keluasan Mengikut Daerah</div><div class="module-card-body module-chart"><canvas id="moduleDistrictArea"></canvas></div></div><div class="module-card full"><div class="module-card-title">Ringkasan Prestasi Daerah</div><div class="module-card-body module-table-wrap"><table class="module-table"><thead><tr><th>Daerah</th><th>Jumlah Tapak</th><th>Keluasan (ha)</th><th>Purata (ha/tapak)</th><th>Islam</th><th>Bukan Islam</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.d)}</b></td><td>${r.c}</td><td>${fmt(r.a)}</td><td>${fmt(r.avg)}</td><td>${r.isl}</td><td>${r.non}</td></tr>`).join('')}</tbody></table></div></div></div>`;
-   moduleCharts.a=new Chart($('moduleDistrictCount'),{type:'bar',data:{labels:rows.map(r=>r.d),datasets:[{data:rows.map(r=>r.c),backgroundColor:pickPalette(rows.length),hoverBackgroundColor:pickPalette(rows.length,SUO_RGB_SOFT),borderColor:'#fff',borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true},y:{grid:{display:false}}}}});
-   moduleCharts.b=new Chart($('moduleDistrictArea'),{type:'bar',data:{labels:rows.map(r=>r.d),datasets:[{data:rows.map(r=>r.a),backgroundColor:pickPalette(rows.length,SUO_RGB),hoverBackgroundColor:pickPalette(rows.length,SUO_RGB_SOFT),borderColor:'#fff',borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true},y:{grid:{display:false}}}}});
- } else if(view==='download'){
+ 
+} else if(view==='district'){
+   const districtNames = Array.from(new Set(filtered.map(r=>r.Daerah).filter(Boolean)));
+   const dcountMap = Object.fromEntries(groupCount(filtered,'Daerah'));
+   const dareaMap = Object.fromEntries(groupSum(filtered,'Daerah'));
+   const totalAreaDistrict = districtNames.reduce((s,d)=>s+(Number(dareaMap[d])||0),0);
+   const rows = districtNames.map(d=>{
+     const items = filtered.filter(r=>r.Daerah===d);
+     const c = items.length;
+     const isl = items.filter(r=>String(r.Agama||'').trim().toLowerCase()==='islam').length;
+     const non = c - isl;
+     const area = items.reduce((s,r)=>s+(Number(r.Luas_Hek)||0),0);
+     return {d,c,isl,non,area,pctArea: totalAreaDistrict? (area/totalAreaDistrict*100):0, avg:c? area/c:0};
+   }).sort((a,b)=>b.c-a.c || b.area-a.area);
+
+   const districtCount = rows.length;
+   const avgSitePerDistrict = districtCount ? total / districtCount : 0;
+   const countColors = pickPalette(rows.length, SUO_RGB);
+   const countSoft = pickPalette(rows.length, SUO_RGB_SOFT);
+   const fmtInt = n => Number(n||0).toLocaleString('ms-MY');
+
+   mv.innerHTML=`<div class="module-head"><div><h2>Analisis Daerah</h2><p>Perbandingan jumlah tapak, keluasan dan komposisi agama untuk setiap daerah.</p></div><div class="module-badge">${districtCount} daerah</div></div>
+   <div class="module-stats district-kpis">
+      <div class="module-stat"><div class="label">JUMLAH DAERAH</div><div class="value">${districtCount}</div><div class="sub">Daerah dipaparkan</div></div>
+      <div class="module-stat"><div class="label">JUMLAH TAPAK</div><div class="value">${fmtInt(total)}</div><div class="sub">Tapak keseluruhan</div></div>
+      <div class="module-stat"><div class="label">JUMLAH KELUASAN</div><div class="value">${fmt(totalAreaDistrict)} ha</div><div class="sub">Keseluruhan negeri</div></div>
+      <div class="module-stat"><div class="label">PURATA TAPAK / DAERAH</div><div class="value">${avgSitePerDistrict.toFixed(1)}</div><div class="sub">Purata bilangan tapak</div></div>
+   </div>
+   <div class="module-grid district-enhanced-grid">
+      <div class="module-card"><div class="module-card-title">Jumlah Tapak Mengikut Daerah</div><div class="module-card-body district-half-chart"><canvas id="moduleDistrictCount"></canvas></div></div>
+      <div class="module-card"><div class="module-card-title">Keluasan Perkuburan Mengikut Daerah</div><div class="module-card-body district-half-chart"><canvas id="moduleDistrictArea"></canvas></div></div>
+      <div class="module-card full"><div class="module-card-title">Komposisi Tapak Perkuburan Mengikut Agama dan Daerah <span class="district-chart-meta">${districtCount} daerah · ${fmtInt(total)} tapak</span></div><div class="module-card-body district-stack-chart"><canvas id="moduleDistrictReligion"></canvas></div></div>
+      <div class="module-card full"><div class="module-card-title">Jadual Perbandingan Daerah</div><div class="module-card-body"><div class="table-scroll"><table class="module-table district-table"><thead><tr><th>Bil.</th><th>Daerah</th><th>Jumlah Tapak</th><th>Islam</th><th>Bukan Islam</th><th>Keluasan (ha)</th><th>% Keluasan</th><th>Purata Saiz Tapak (ha)</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td><b>${esc(r.d)}</b></td><td>${fmtInt(r.c)}</td><td>${fmtInt(r.isl)}</td><td>${fmtInt(r.non)}</td><td>${fmt(r.area)}</td><td>${r.pctArea.toFixed(1)}%</td><td>${fmt(r.avg)}</td></tr>`).join('')}</tbody><tfoot><tr><th colspan="2">Jumlah Negeri Selangor</th><th>${fmtInt(total)}</th><th>${fmtInt(rows.reduce((s,r)=>s+r.isl,0))}</th><th>${fmtInt(rows.reduce((s,r)=>s+r.non,0))}</th><th>${fmt(totalAreaDistrict)}</th><th>100.0%</th><th>${fmt(totalAreaDistrict/(total||1))}</th></tr></tfoot></table></div></div></div>
+   </div>`;
+
+   const districtLabelPlugin = {
+     id:'districtLabelPlugin',
+     afterDatasetsDraw(chart,args,opts){
+       const ctx = chart.ctx;
+       if(chart.canvas.id==='moduleDistrictCount' || chart.canvas.id==='moduleDistrictArea'){
+         const meta = chart.getDatasetMeta(0);
+         ctx.save();
+         ctx.textAlign='left';
+         ctx.textBaseline='middle';
+         ctx.fillStyle='#24324B';
+         ctx.font='700 11px Inter,Arial,sans-serif';
+         (meta.data||[]).forEach((bar,i)=>{
+           const value = Number(chart.data.datasets[0].data[i])||0;
+           const text = chart.canvas.id==='moduleDistrictCount'
+             ? `${fmtInt(value)} (${((value/(total||1))*100).toFixed(1)}%)`
+             : `${fmt(value)} ha (${((value/(totalAreaDistrict||1))*100).toFixed(1)}%)`;
+           const tx = Math.min(bar.x + 8, chart.chartArea.right - ctx.measureText(text).width - 4);
+           ctx.fillText(text, tx, bar.y);
+         });
+         ctx.restore();
+       }
+       if(chart.canvas.id==='moduleDistrictReligion'){
+         const labels = chart.data.labels || [];
+         const islamMeta = chart.getDatasetMeta(0);
+         const nonMeta = chart.getDatasetMeta(1);
+         ctx.save();
+         ctx.textAlign='center';
+         ctx.textBaseline='middle';
+         ctx.font='700 11px Inter,Arial,sans-serif';
+         ctx.fillStyle='#17213A';
+         labels.forEach((_,i)=>{
+           const top = nonMeta.data[i] || islamMeta.data[i];
+           const totalBar = (Number(chart.data.datasets[0].data[i])||0)+(Number(chart.data.datasets[1].data[i])||0);
+           if(top) ctx.fillText(String(totalBar), top.x, top.y - top.height/2 - 12);
+           const a = islamMeta.data[i], b = nonMeta.data[i];
+           if(a && a.height > 18){
+             ctx.fillStyle = '#FFFFFF';
+             ctx.fillText(String(chart.data.datasets[0].data[i]), a.x, a.y);
+           }
+           if(b && b.height > 18){
+             ctx.fillStyle = '#2D3748';
+             ctx.fillText(String(chart.data.datasets[1].data[i]), b.x, b.y);
+           }
+           ctx.fillStyle='#17213A';
+         });
+         ctx.restore();
+       }
+     }
+   };
+
+   const commonPlugins = {
+     legend:{display:false},
+     tooltip:{
+       backgroundColor:'#17213A',
+       titleColor:'#FFFFFF',
+       bodyColor:'#FFFFFF',
+       padding:10,
+       callbacks:{label:(c)=>`${c.dataset.label||c.label}: ${typeof c.raw==='number'?fmt(c.raw):c.raw}`}
+     }
+   };
+
+   moduleCharts.a = new Chart($('moduleDistrictCount'),{
+     type:'bar',
+     data:{labels:rows.map(r=>r.d),datasets:[{label:'Jumlah Tapak',data:rows.map(r=>r.c),backgroundColor:countColors,borderRadius:6,maxBarThickness:24}]},
+     plugins:[districtLabelPlugin],
+     options:{indexAxis:'y',maintainAspectRatio:false,layout:{padding:{right:92,left:4}},plugins:{...commonPlugins},scales:{x:{beginAtZero:true,grid:{color:'rgba(148,163,184,.16)'},ticks:{precision:0,color:'#64748B'},title:{display:true,text:'Jumlah Tapak',color:'#64748B'}},y:{grid:{display:false},ticks:{color:'#344054',font:{size:11}}}}}
+   });
+
+   moduleCharts.b = new Chart($('moduleDistrictArea'),{
+     type:'bar',
+     data:{labels:rows.slice().sort((a,b)=>b.area-a.area).map(r=>r.d),datasets:[{label:'Keluasan',data:rows.slice().sort((a,b)=>b.area-a.area).map(r=>r.area),backgroundColor:rows.slice().sort((a,b)=>b.area-a.area).map(r=>countColors[rows.findIndex(x=>x.d===r.d)]),borderRadius:6,maxBarThickness:24}]},
+     plugins:[districtLabelPlugin],
+     options:{indexAxis:'y',maintainAspectRatio:false,layout:{padding:{right:128,left:4}},plugins:{...commonPlugins},scales:{x:{beginAtZero:true,grid:{color:'rgba(148,163,184,.16)'},ticks:{color:'#64748B'},title:{display:true,text:'Keluasan (ha)',color:'#64748B'}},y:{grid:{display:false},ticks:{color:'#344054',font:{size:11}}}}}
+   });
+
+   moduleCharts.c = new Chart($('moduleDistrictReligion'),{
+     type:'bar',
+     data:{
+       labels:rows.map(r=>r.d),
+       datasets:[
+         {label:'Islam',data:rows.map(r=>r.isl),backgroundColor:countColors,borderRadius:4,stack:'agama'},
+         {label:'Bukan Islam',data:rows.map(r=>r.non),backgroundColor:countSoft,borderRadius:4,stack:'agama'}
+       ]
+     },
+     plugins:[districtLabelPlugin],
+     options:{
+       maintainAspectRatio:false,
+       layout:{padding:{top:18,right:10,left:6,bottom:0}},
+       plugins:{
+         legend:{display:true,position:'top',align:'end',labels:{boxWidth:12,padding:16,color:'#364258',font:{size:12}}},
+         tooltip:{
+           backgroundColor:'#17213A',titleColor:'#FFFFFF',bodyColor:'#FFFFFF',padding:10,
+           callbacks:{
+             label:(c)=>`${c.dataset.label}: ${fmtInt(c.raw)} tapak`,
+             footer:(items)=>{
+               const i = items[0].dataIndex;
+               const totalDistrict = rows[i].c;
+               return `Jumlah daerah: ${fmtInt(totalDistrict)} tapak`;
+             }
+           }
+         }
+       },
+       scales:{
+         x:{stacked:true,grid:{color:'rgba(148,163,184,.16)'},ticks:{color:'#344054',maxRotation:0,minRotation:0}},
+         y:{stacked:true,beginAtZero:true,grid:{color:'rgba(148,163,184,.16)'},ticks:{precision:0,color:'#64748B'},title:{display:true,text:'Jumlah Tapak',color:'#64748B'}}
+       }
+     }
+   });
+} else if(view==='download'){
    mv.innerHTML=`<div class="module-head"><div><h2>Muat Turun Data</h2><p>Eksport ${total} rekod berdasarkan penapis semasa dashboard.</p></div><div class="module-badge">Data 2026</div></div><div class="download-grid"><div class="download-box"><i class="fa-solid fa-file-csv"></i><h3>CSV</h3><p>Untuk Excel, analisis statistik dan penyediaan laporan.</p><button class="download-action" id="dlCsv">Muat Turun CSV</button></div><div class="download-box"><i class="fa-solid fa-map-location-dot"></i><h3>GeoJSON</h3><p>Untuk GIS, ArcGIS, QGIS dan aplikasi pemetaan web.</p><button class="download-action" id="dlGeo">Muat Turun GeoJSON</button></div><div class="download-box"><i class="fa-solid fa-filter"></i><h3>Rekod Ditapis</h3><p>Eksport hanya data yang sedang dipaparkan mengikut Daerah, PBT, Agama dan Kategori.</p><button class="download-action" id="dlFiltered">Eksport ${total} Rekod</button></div></div>`; $('dlCsv').onclick=exportCsv;$('dlGeo').onclick=exportGeoJson;$('dlFiltered').onclick=exportCsv;
  } else if(view==='about'){
    mv.innerHTML=`<div class="module-head"><div><h2>Mengenai Dashboard</h2><p>Dashboard Tapak Perkuburan Negeri Selangor — Selangor Urban Observatory (SUO).</p></div><div class="module-badge">SUO • 2026</div></div><div class="module-grid"><div class="module-card"><div class="module-card-title">Tujuan Dashboard</div><div class="module-card-body about-block">Dashboard ini menyokong pemantauan spatial dan analisis perancangan tapak perkuburan di Negeri Selangor. Ia membolehkan pengguna melihat taburan tapak, keluasan, kategori, agama, daerah dan PBT secara interaktif.<br><br><strong>Nota penting:</strong> modul “Keluasan &amp; Taburan” menggunakan atribut keluasan yang tersedia. Dataset semasa tidak mempunyai medan kapasiti lot, lot digunakan atau baki kapasiti; oleh itu tiada angka kapasiti yang direka.</div></div><div class="module-card"><div class="module-card-title">Sumber &amp; Kemas Kini</div><div class="module-card-body about-block"><strong>Sumber:</strong> Data Tapak Perkuburan Negeri Selangor 2026<br><strong>Jumlah rekod:</strong> ${DATA.length} tapak<br><strong>Tarikh kemas kini dashboard:</strong> 8 September 2026<br><strong>Platform:</strong> Selangor Urban Observatory (SUO)<br><br><strong>Medan utama:</strong><br>${['Nama','Daerah','PBT','Agama','Kategori','Lokasi','Alamat','Luas_Hek','Latitude','Longitude'].map(x=>`<span class="field-chip">${x}</span>`).join('')}</div></div></div>`;
